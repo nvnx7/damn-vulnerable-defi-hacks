@@ -60,6 +60,7 @@ contract PuppetPool is ReentrancyGuard {
      *
      * 凸 ( ͡◣ ͜ʖ ͡◢)凸
      * VULNERABILITY: Token pool at uniswap can be manipulated
+     * The simple division is rounded down to zero
      */
     function _computeOraclePrice() private view returns (uint256) {
         // calculates the price of the token in wei according to Uniswap pair
